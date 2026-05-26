@@ -1,31 +1,79 @@
-# SteamAchievementManager Modernization (WPF)
+# SAM Modern
 
-This repository now contains a **WPF (.NET 8)** modernization scaffold that preserves the intent of the legacy SAM workflow while preparing a safer, more maintainable architecture.
+A modern, user-friendly desktop rework of **Steam Achievement Manager**, built with **WPF + .NET 8**.
 
-## Goals
+SAM Modern keeps the familiar workflow from the legacy tool while introducing a cleaner architecture, improved UX, and safer-by-default runtime behavior.
 
-- Keep legacy functionality path available (game list, achievements/stats management).
-- Introduce layered architecture (`Core`, `Infrastructure`, `UI`).
-- Add safe-by-default runtime controls and explicit network policy surfaces.
-- Enable incremental migration from legacy WinForms code.
+---
 
-## Solution layout
+## 🚀 Download
 
-- `src/SamModern.Core` — domain models and contracts.
-- `src/SamModern.Infrastructure` — Steam adapter and data services.
-- `src/SamModern.App` — WPF desktop UI app.
+> **Latest Windows `.exe`**: **[Download here](PASTE_RELEASE_LINK_HERE)**
+>
+> Replace `PASTE_RELEASE_LINK_HERE` with your release URL (for example, a GitHub Releases asset link).
 
-## Current status
+---
 
-- Scaffolded solution and projects.
-- Basic shell window with navigation placeholder.
-- Dependency injection wiring.
-- Initial network policy abstraction (allowlist model).
+## ✨ Highlights
 
-## Next steps
+- **Modern desktop UI** (WPF)
+- **Incremental migration path** from legacy SAM behavior
+- **Layered architecture** for maintainability and testing
+- **Safety-focused runtime design** with explicit network policy boundaries
+- **Ready for CI/CD publishing** of release artifacts
 
-1. Add Steam client adapter implementation and legacy interop bridge.
-2. Implement game list loading and filtering in `Core` + `Infrastructure`.
-3. Add achievements/stats editing screens in WPF.
-4. Add local audit log viewer and request transparency panel.
+---
 
+## 🧱 Project Structure
+
+```text
+src/
+  SamModern.Core            # Domain models, contracts, business rules
+  SamModern.Infrastructure  # Integrations, adapters, data access
+  SamModern.App             # WPF application (UI layer)
+```
+
+- **Core**: stable domain surface and abstractions
+- **Infrastructure**: implementation details and external integrations
+- **App**: modern desktop experience and presentation logic
+
+---
+
+## 🛣️ Roadmap
+
+- [ ] Steam client adapter bridge
+- [ ] Game list loading and filtering
+- [ ] Achievements and stats editor screens
+- [ ] Local audit log viewer
+- [ ] Transparent network activity panel
+- [ ] Automated release pipeline with `.exe` artifacts
+
+---
+
+## 🧰 Tech Stack
+
+- **.NET 8**
+- **WPF (Windows Desktop)**
+- **C#**
+
+---
+
+## 📦 Build & Publish (Windows)
+
+```bash
+dotnet restore SamModern.sln
+dotnet build SamModern.sln -c Release
+dotnet publish src/SamModern.App/SamModern.App.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+```
+
+Published binaries will be available under:
+
+```text
+src/SamModern.App/bin/Release/net8.0-windows/win-x64/publish/
+```
+
+---
+
+## ⚠️ Note
+
+This project focuses on usability, maintainability, and transparent behavior. Always use Steam-related tools responsibly and in accordance with Steam's Terms of Service.
