@@ -1,0 +1,34 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - uses: NuGet/setup-nuget@v2
+      - name: Restore
+        run: nuget restore SAM.sln
+      - name: Build release
+        run: msbuild SAM.sln /m /p:Configuration=Release /p:Platform=x86 /warnaserror
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path package -Force | Out-Null
+          Copy-Item upload\*.exe, upload\*.dll, LICENSE.txt -Destination package
+          Compress-Archive -Path package\* -DestinationPath SteamAchievementManager.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SteamAchievementManager
+          path: SteamAchievementManager.zip
+          if-no-files-found: error

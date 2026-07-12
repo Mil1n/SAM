@@ -29,7 +29,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Windows.Forms;
 using System.Xml.XPath;
 using static SAM.Picker.InvariantShorthand;
@@ -39,6 +39,17 @@ namespace SAM.Picker
 {
     internal partial class GamePicker : Form
     {
+        private static readonly HttpClient HttpClient = CreateHttpClient();
+
+        private static HttpClient CreateHttpClient()
+        {
+            var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(20),
+            };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mil1n-SAM/7.1");
+            return client;
+        }
         private readonly API.Client _SteamClient;
 
         private readonly Dictionary<uint, GameInfo> _Games;
@@ -98,13 +109,9 @@ namespace SAM.Picker
 
         private void DoDownloadList(object sender, DoWorkEventArgs e)
         {
-            this._PickerStatusLabel.Text = "Downloading game list...";
-
-            byte[] bytes;
-            using (WebClient downloader = new())
-            {
-                bytes = downloader.DownloadData(new Uri("https://gib.me/sam/games.xml"));
-            }
+            byte[] bytes = HttpClient.GetByteArrayAsync("https://gib.me/sam/games.xml")
+                .GetAwaiter()
+                .GetResult();
 
             List<KeyValuePair<uint, string>> pairs = new();
             using (MemoryStream stream = new(bytes, false))
@@ -123,7 +130,6 @@ namespace SAM.Picker
                 }
             }
 
-            this._PickerStatusLabel.Text = "Checking game ownership...";
             foreach (var kv in pairs)
             {
                 this.AddGame(kv.Key, kv.Value);
@@ -135,7 +141,8 @@ namespace SAM.Picker
             if (e.Error != null || e.Cancelled == true)
             {
                 this.AddDefaultGames();
-                MessageBox.Show(e.Error.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string message = e.Error?.Message ?? "The operation was cancelled.";
+                MessageBox.Show(message, "Unable to refresh games", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             this.RefreshGames();
@@ -255,21 +262,18 @@ namespace SAM.Picker
 
             this._LogosAttempted.Add(info.ImageUrl);
 
-            using (WebClient downloader = new())
+            try
             {
-                try
+                var data = HttpClient.GetByteArrayAsync(info.ImageUrl).GetAwaiter().GetResult();
+                using (MemoryStream stream = new(data, false))
                 {
-                    var data = downloader.DownloadData(new Uri(info.ImageUrl));
-                    using (MemoryStream stream = new(data, false))
-                    {
-                        Bitmap bitmap = new(stream);
-                        e.Result = new LogoInfo(info.Id, bitmap);
-                    }
+                    Bitmap bitmap = new(stream);
+                    e.Result = new LogoInfo(info.Id, bitmap);
                 }
-                catch (Exception)
-                {
-                    e.Result = new LogoInfo(info.Id, null);
-                }
+            }
+            catch (Exception)
+            {
+                e.Result = new LogoInfo(info.Id, null);
             }
         }
 
