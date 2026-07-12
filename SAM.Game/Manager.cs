@@ -764,6 +764,18 @@ namespace SAM.Game
 
         private void OnStore(object sender, EventArgs e)
         {
+            if (MessageBox.Show(
+                this,
+                "Apply the selected achievement and statistic changes to Steam?\n\n" +
+                "This action changes the data associated with the current Steam account.",
+                "Confirm changes",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            {
+                return;
+            }
+
             int achievements = this.StoreAchievements();
             if (achievements < 0)
             {
