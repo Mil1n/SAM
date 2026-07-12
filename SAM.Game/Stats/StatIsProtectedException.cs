@@ -21,39 +21,30 @@
  */
 
 using System;
-using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
-namespace SAM.API
+namespace SAM.Game.Stats
 {
-    public abstract class Callback : ICallback
+    [Serializable]
+    internal class StatIsProtectedException : Exception
     {
-        public delegate void CallbackFunction(IntPtr param);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public StatIsProtectedException()
         {
-            this.OnRun(param);
         }
-    }
 
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
+        public StatIsProtectedException(string message)
+            : base(message)
         {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+        }
+
+        public StatIsProtectedException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+
+        protected StatIsProtectedException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
         }
     }
 }

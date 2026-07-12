@@ -22,38 +22,34 @@
 
 using System;
 using System.Runtime.InteropServices;
+using SAM.API.Interfaces;
 
-namespace SAM.API
+namespace SAM.API.Wrappers
 {
-    public abstract class Callback : ICallback
+    public class SteamUser012 : NativeWrapper<ISteamUser012>
     {
-        public delegate void CallbackFunction(IntPtr param);
+        #region IsLoggedIn
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeLoggedOn(IntPtr self);
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public bool IsLoggedIn()
         {
-            this.OnRun(param);
+            return this.Call<bool, NativeLoggedOn>(this.Functions.LoggedOn, this.ObjectAddress);
         }
-    }
+        #endregion
 
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
+        #region GetSteamID
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        private delegate void NativeGetSteamId(IntPtr self, out ulong steamId);
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
+        public ulong GetSteamId()
         {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+            var call = this.GetFunction<NativeGetSteamId>(this.Functions.GetSteamID);
+            ulong steamId;
+            call(this.ObjectAddress, out steamId);
+            return steamId;
         }
+        #endregion
     }
 }

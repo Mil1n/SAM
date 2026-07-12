@@ -21,39 +21,14 @@
  */
 
 using System;
-using System.Runtime.InteropServices;
 
-namespace SAM.API
+namespace SAM.Picker
 {
-    public abstract class Callback : ICallback
+    internal static class InvariantShorthand
     {
-        public delegate void CallbackFunction(IntPtr param);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public static string _(FormattableString formattable)
         {
-            this.OnRun(param);
-        }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+            return FormattableString.Invariant(formattable);
         }
     }
 }

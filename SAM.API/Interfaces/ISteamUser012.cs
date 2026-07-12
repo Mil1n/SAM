@@ -23,37 +23,26 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SAM.API
+namespace SAM.API.Interfaces
 {
-    public abstract class Callback : ICallback
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct ISteamUser012
     {
-        public delegate void CallbackFunction(IntPtr param);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
-        {
-            this.OnRun(param);
-        }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
-        }
+        public IntPtr GetHSteamUser;
+        public IntPtr LoggedOn;
+        public IntPtr GetSteamID;
+        public IntPtr InitiateGameConnection;
+        public IntPtr TerminateGameConnection;
+        public IntPtr TrackAppUsageEvent;
+        public IntPtr GetUserDataFolder;
+        public IntPtr StartVoiceRecording;
+        public IntPtr StopVoiceRecording;
+        public IntPtr GetCompressedVoice;
+        public IntPtr DecompressVoice;
+        public IntPtr GetAuthSessionTicket;
+        public IntPtr BeginAuthSession;
+        public IntPtr EndAuthSession;
+        public IntPtr CancelAuthTicket;
+        public IntPtr UserHasLicenseForApp;
     }
 }

@@ -21,39 +21,15 @@
  */
 
 using System;
-using System.Runtime.InteropServices;
 
-namespace SAM.API
+namespace SAM.Game.Stats
 {
-    public abstract class Callback : ICallback
+    [Flags]
+    internal enum StatFlags
     {
-        public delegate void CallbackFunction(IntPtr param);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
-        {
-            this.OnRun(param);
-        }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
-        }
+        None = 0,
+        IncrementOnly = 1 << 0,
+        Protected = 1 << 1,
+        UnknownPermission = 1 << 2,
     }
 }

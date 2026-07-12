@@ -20,40 +20,27 @@
  *    distribution.
  */
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace SAM.API
+namespace SAM.Game.Stats
 {
-    public abstract class Callback : ICallback
+    internal abstract class StatInfo
     {
-        public delegate void CallbackFunction(IntPtr param);
+        public abstract bool IsModified { get; }
+        public string Id { get; set; }
+        public string DisplayName { get; set; }
+        public abstract object Value { get; set; }
+        public bool IsIncrementOnly { get; set; }
+        public int Permission { get; set; }
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public string Extra
         {
-            this.OnRun(param);
-        }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+            get
+            {
+                var flags = StatFlags.None;
+                flags |= this.IsIncrementOnly == false ? 0 : StatFlags.IncrementOnly;
+                flags |= ((this.Permission & 2) != 0) == false ? 0 : StatFlags.Protected;
+                flags |= ((this.Permission & ~2) != 0) == false ? 0 : StatFlags.UnknownPermission;
+                return flags.ToString();
+            }
         }
     }
 }

@@ -20,40 +20,36 @@
  *    distribution.
  */
 
-using System;
-using System.Runtime.InteropServices;
+using System.Globalization;
+using System.Windows.Forms;
 
-namespace SAM.API
+namespace SAM.Picker
 {
-    public abstract class Callback : ICallback
+    internal class GameInfo
     {
-        public delegate void CallbackFunction(IntPtr param);
+        private string _Name;
 
-        public event CallbackFunction OnRun;
+        public uint Id;
+        public string Type;
+        public int ImageIndex;
 
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public string Name
         {
-            this.OnRun(param);
+            get => this._Name;
+            set => this._Name = value ?? "App " + this.Id.ToString(CultureInfo.InvariantCulture);
         }
-    }
 
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
+        public string ImageUrl;
 
-        public event CallbackFunction OnRun;
+        public ListViewItem Item;
 
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
+        public GameInfo(uint id, string type)
         {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+            this.Id = id;
+            this.Type = type;
+            this.Name = null;
+            this.ImageIndex = 0;
+            this.ImageUrl = null;
         }
     }
 }

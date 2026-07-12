@@ -21,39 +21,28 @@
  */
 
 using System;
-using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
-namespace SAM.API
+namespace SAM.Game.Stats
 {
-    public abstract class Callback : ICallback
+    internal class AchievementInfo
     {
-        public delegate void CallbackFunction(IntPtr param);
+        public string Id;
+        public bool IsAchieved;
+        public DateTime? UnlockTime;
+        public int Permission;
+        public string IconNormal;
+        public string IconLocked;
+        public string Name;
+        public string Description;
+        public ListViewItem Item;
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        #region public int ImageIndex;
+        public int ImageIndex
         {
-            this.OnRun(param);
+            get => this.Item.ImageIndex;
+            set => this.Item.ImageIndex = value;
         }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
-        }
+        #endregion
     }
 }

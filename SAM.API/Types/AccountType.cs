@@ -20,40 +20,19 @@
  *    distribution.
  */
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace SAM.API
+namespace SAM.API.Types
 {
-    public abstract class Callback : ICallback
+    public enum AccountType : int
     {
-        public delegate void CallbackFunction(IntPtr param);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
-        {
-            this.OnRun(param);
-        }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
-        }
+        Invalid = 0,
+        Individual = 1,
+        Multiset = 2,
+        GameServer = 3,
+        AnonGameServer = 4,
+        Pending = 5,
+        ContentServer = 6,
+        Clan = 7,
+        Chat = 8,
+        P2PSuperSeeder = 9,
     }
 }

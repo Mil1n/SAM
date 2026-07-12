@@ -20,40 +20,21 @@
  *    distribution.
  */
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace SAM.API
+namespace SAM.Game.Stats
 {
-    public abstract class Callback : ICallback
+    internal class AchievementDefinition
     {
-        public delegate void CallbackFunction(IntPtr param);
+        public string Id;
+        public string Name;
+        public string Description;
+        public string IconNormal;
+        public string IconLocked;
+        public bool IsHidden;
+        public int Permission;
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public override string ToString()
         {
-            this.OnRun(param);
-        }
-    }
-
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+            return $"{this.Name ?? this.Id ?? base.ToString()}: {this.Permission}";
         }
     }
 }

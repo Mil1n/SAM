@@ -22,38 +22,34 @@
 
 using System;
 using System.Runtime.InteropServices;
+using SAM.API.Interfaces;
 
-namespace SAM.API
+namespace SAM.API.Wrappers
 {
-    public abstract class Callback : ICallback
+    public class SteamApps008 : NativeWrapper<ISteamApps008>
     {
-        public delegate void CallbackFunction(IntPtr param);
+        #region IsSubscribed
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeIsSubscribedApp(IntPtr self, uint gameId);
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public bool IsSubscribedApp(uint gameId)
         {
-            this.OnRun(param);
+            return this.Call<bool, NativeIsSubscribedApp>(this.Functions.IsSubscribedApp, this.ObjectAddress, gameId);
         }
-    }
+        #endregion
 
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
+        #region GetCurrentGameLanguage
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        private delegate IntPtr NativeGetCurrentGameLanguage(IntPtr self);
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
+        public string GetCurrentGameLanguage()
         {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
+            var languagePointer = this.Call<IntPtr, NativeGetCurrentGameLanguage>(
+                this.Functions.GetCurrentGameLanguage,
+                this.ObjectAddress);
+            return NativeStrings.PointerToString(languagePointer);
         }
+        #endregion
     }
 }

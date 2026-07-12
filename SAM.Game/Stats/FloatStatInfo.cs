@@ -20,40 +20,28 @@
  *    distribution.
  */
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace SAM.API
+namespace SAM.Game.Stats
 {
-    public abstract class Callback : ICallback
+    internal class FloatStatInfo : StatInfo
     {
-        public delegate void CallbackFunction(IntPtr param);
+        public float OriginalValue;
+        public float FloatValue;
 
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr param)
+        public override object Value
         {
-            this.OnRun(param);
+            get => this.FloatValue;
+            set
+            {
+                var f = float.Parse((string)value, System.Globalization.CultureInfo.CurrentCulture);
+                if ((this.Permission & 2) != 0 &&
+                    this.FloatValue.Equals(f) == false)
+                {
+                    throw new StatIsProtectedException();
+                }
+                this.FloatValue = f;
+            }
         }
-    }
 
-    public abstract class Callback<TParameter> : ICallback
-        where TParameter : struct
-    {
-        public delegate void CallbackFunction(TParameter arg);
-
-        public event CallbackFunction OnRun;
-
-        public abstract int Id { get; }
-        public abstract bool IsServer { get; }
-
-        public void Run(IntPtr pvParam)
-        {
-            var data = (TParameter)Marshal.PtrToStructure(pvParam, typeof(TParameter));
-            this.OnRun(data);
-        }
+        public override bool IsModified => this.FloatValue.Equals(this.OriginalValue) == false;
     }
 }
