@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gibbed/SteamAchievementManager/releases/latest"><img src="https://img.shields.io/github/v/release/gibbed/SteamAchievementManager?style=for-the-badge&label=upstream%20release&color=1b8cff" alt="Latest upstream release"></a>
+  <a href="https://github.com/Mil1n/SAM/releases/latest"><img src="https://img.shields.io/github/v/release/Mil1n/SAM?style=for-the-badge&label=latest%20release&color=1b8cff" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/Windows-desktop-0078D6?style=for-the-badge&logo=windows11&logoColor=white" alt="Windows desktop">
   <img src="https://img.shields.io/badge/.NET_Framework-4.8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET Framework 4.8">
   <img src="https://img.shields.io/badge/architecture-x86-f39c12?style=for-the-badge" alt="x86 architecture">
@@ -56,11 +56,13 @@ This repository is an independently maintained copy based on the open-source [St
 
 ## 📦 Download
 
-Prebuilt binaries are published by the original project:
+Ready-to-run Windows binaries built from this repository are available on the Releases page:
 
-### [⬇️ Download the latest upstream release](https://github.com/gibbed/SteamAchievementManager/releases/latest)
+### [⬇️ Download the latest release](https://github.com/Mil1n/SAM/releases/latest)
 
 Download the release archive, extract every file to the same folder, and keep the executables and `SAM.API.dll` together.
+
+Release archives are compiled automatically from this repository by GitHub Actions. The executables are not digitally signed, so Windows SmartScreen may show an **Unknown publisher** warning. Verify the SHA-256 checksum published in the release notes before running them.
 
 For development or auditing, clone this repository and build the solution from source using the instructions below.
 
@@ -147,7 +149,7 @@ These are improvement ideas, not implemented features:
 - [ ] 🗃️ Remove the single game-list dependency by combining cached metadata with local Steam library discovery.
 - [ ] 🔌 Harden Steam callbacks and native wrappers with guaranteed cleanup and clearer interface-compatibility errors.
 - [ ] 🧪 Add automated tests for KeyValue parsing, schema mapping, filters, callbacks, and statistic rules.
-- [ ] ⚙️ Add GitHub Actions builds for `main`, reproducible x86 artifacts, SHA-256 checksums, and optional signing.
+- [x] ⚙️ Add GitHub Actions builds for `main`, x86 release artifacts, and SHA-256 checksums.
 - [ ] 🩺 Add structured diagnostic logging and a privacy-safe **Copy diagnostics** report.
 - [ ] 💎 Surface hidden achievements, global rarity, progress, and additional sorting options.
 - [ ] 🎨 Add localization, accessibility improvements, high-DPI support, keyboard navigation, and system-aware theming.
