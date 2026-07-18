@@ -1,0 +1,210 @@
+name: Publish Windows Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release-7.0.41
+  cancel-in-progress: false
+
+env:
+  RELEASE_VERSION: '7.0.41'
+
+jobs:
+  publish:
+    name: Build and publish 7.0.41
+    if: github.repository == 'Mil1n/SAM'
+    runs-on: windows-2022
+
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Set up NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore dependencies
+        shell: pwsh
+        run: nuget restore SAM.sln
+
+      - name: Build Release x86
+        shell: pwsh
+        run: >-
+          msbuild SAM.sln /m
+          /p:Configuration=Release
+          /p:Platform=x86
+          /p:Version=${{ env.RELEASE_VERSION }}
+          /p:AssemblyVersion=${{ env.RELEASE_VERSION }}.0
+          /p:FileVersion=${{ env.RELEASE_VERSION }}.0
+          /p:InformationalVersion=${{ env.RELEASE_VERSION }}
+          /p:RepositoryUrl=https://github.com/Mil1n/SAM
+
+      - name: Package portable build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = $env:RELEASE_VERSION
+          $packageDirectory = Join-Path $env:RUNNER_TEMP 'sam-package'
+          $archiveName = "SteamAchievementManager-$version.zip"
+          $archivePath = Join-Path $env:GITHUB_WORKSPACE $archiveName
+
+          New-Item -ItemType Directory -Path $packageDirectory -Force | Out-Null
+
+          $releaseFiles = @(
+              'upload\SAM.Picker.exe'
+              'upload\SAM.Game.exe'
+              'upload\SAM.API.dll'
+              'LICENSE.txt'
+          )
+
+          foreach ($relativePath in $releaseFiles) {
+              $sourcePath = Join-Path $env:GITHUB_WORKSPACE $relativePath
+              if (-not (Test-Path -LiteralPath $sourcePath)) {
+                  throw "Required release file was not produced: $relativePath"
+              }
+              Copy-Item -LiteralPath $sourcePath -Destination $packageDirectory
+          }
+
+          git log --date=short --pretty=format:'%h %ad %s (%an)' |
+              Set-Content -LiteralPath (Join-Path $packageDirectory 'git-log.txt') -Encoding utf8
+
+          Compress-Archive -Path (Join-Path $packageDirectory '*') `
+              -DestinationPath $archivePath -CompressionLevel Optimal
+
+          $hash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+          $releaseNotesPath = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+          $releaseNotes = @'
+          ## 🏆 Steam Achievement Manager 7.0.41 — Mil1n Build
+
+          A ready-to-run portable Windows build compiled automatically from the current [`Mil1n/SAM:main`](https://github.com/Mil1n/SAM/tree/main) source at commit [`{COMMIT_SHORT}`](https://github.com/Mil1n/SAM/commit/{COMMIT}).
+
+          The source baseline is [`gibbed/SteamAchievementManager` 7.0.41](https://github.com/gibbed/SteamAchievementManager/releases/tag/7.0.41), upstream commit [`de8b710`](https://github.com/gibbed/SteamAchievementManager/commit/de8b71048a0cee3c3e97cd8535e0f55ca86513e4). This archive was not copied from the upstream release: its executables were rebuilt by GitHub Actions from this repository.
+
+          ### 📦 Included files
+
+          - `SAM.Picker.exe` — game selection and launcher
+          - `SAM.Game.exe` — achievement and statistics manager
+          - `SAM.API.dll` — Steam API integration
+          - `LICENSE.txt` — zlib license
+          - `git-log.txt` — source history for this build
+
+          ### 🚀 How to run
+
+          1. Download `SteamAchievementManager-7.0.41.zip`.
+          2. Extract every file into the same folder outside the Steam installation directory.
+          3. Start Steam and sign in to your account.
+          4. Launch `SAM.Picker.exe`.
+
+          No installer is required.
+
+          ### 🧰 Requirements
+
+          - Windows with x86 application support
+          - .NET Framework 4.8
+          - Steam desktop client running and signed in
+          - Network access
+
+          ### ⚠️ Important
+
+          Changes are applied to the Steam account currently signed in and may not always be reversible. Use the application at your own risk.
+
+          These executables are not digitally signed, so Windows SmartScreen may show an **Unknown publisher** warning. Verify the archive checksum before running it.
+
+          ### 🔐 Integrity
+
+          **SHA-256:** `{SHA256}`
+
+          Distributed under the zlib License. This project is independently maintained and is not affiliated with Valve Corporation.
+          '@
+
+          $releaseNotes = $releaseNotes.Trim().Replace('{COMMIT}', $env:GITHUB_SHA)
+          $releaseNotes = $releaseNotes.Replace('{COMMIT_SHORT}', $env:GITHUB_SHA.Substring(0, 7))
+          $releaseNotes = $releaseNotes.Replace('{SHA256}', $hash)
+          Set-Content -LiteralPath $releaseNotesPath -Value $releaseNotes -Encoding utf8
+
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "ARCHIVE_PATH=$archivePath"
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "ARCHIVE_SHA256=$hash"
+          Add-Content -LiteralPath $env:GITHUB_ENV -Value "RELEASE_NOTES_PATH=$releaseNotesPath"
+
+          Write-Host "Created $archiveName"
+          Write-Host "SHA-256: $hash"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SteamAchievementManager-${{ env.RELEASE_VERSION }}
+          path: SteamAchievementManager-${{ env.RELEASE_VERSION }}.zip
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
+          $tag = $env:RELEASE_VERSION
+          $repository = $env:GITHUB_REPOSITORY
+          $assetName = Split-Path -Leaf $env:ARCHIVE_PATH
+
+          $resolvedTagSha = gh api "repos/$repository/commits/$tag" --jq .sha 2> $null
+          $tagExists = $LASTEXITCODE -eq 0
+
+          if ($tagExists -and $resolvedTagSha.Trim() -ne $env:GITHUB_SHA) {
+              throw "Tag $tag already points to $($resolvedTagSha.Trim()), not this build commit $env:GITHUB_SHA."
+          }
+
+          $releaseJson = gh release view $tag --repo $repository --json tagName,title,assets 2> $null
+          $releaseExists = $LASTEXITCODE -eq 0
+
+          if ($releaseExists) {
+              $release = $releaseJson | ConvertFrom-Json
+              $assetExists = $null -ne ($release.assets | Where-Object { $_.name -eq $assetName })
+
+              if ($assetExists) {
+                  Write-Host "Release $tag already contains $assetName; nothing to publish."
+                  exit 0
+              }
+
+              gh release edit $tag `
+                  --repo $repository `
+                  --title "Steam Achievement Manager $tag — Mil1n Build" `
+                  --notes-file $env:RELEASE_NOTES_PATH
+
+              if ($LASTEXITCODE -ne 0) {
+                  throw "GitHub CLI failed to update release $tag."
+              }
+
+              gh release upload $tag $env:ARCHIVE_PATH --repo $repository
+
+              if ($LASTEXITCODE -ne 0) {
+                  throw "GitHub CLI failed to upload $assetName to release $tag."
+              }
+
+              Write-Host "Uploaded missing asset $assetName to release $tag."
+              exit 0
+          }
+
+          gh release create $tag $env:ARCHIVE_PATH `
+              --repo $repository `
+              --target $env:GITHUB_SHA `
+              --title "Steam Achievement Manager $tag — Mil1n Build" `
+              --notes-file $env:RELEASE_NOTES_PATH
+
+          if ($LASTEXITCODE -ne 0) {
+              throw "GitHub CLI failed to create release $tag."
+          }
+
